@@ -5,19 +5,18 @@ export const useUserStore = defineStore('user', {
     state: () => ({
         userLogin: '',
         role: '',
+        token: '',
         initialized: false
     }),
 
     actions: {
         async init() {
             if (this.initialized) return
-
-            try {
-                const res = await api.get('/me')
-                this.userLogin = res.data.login
-                this.role = res.data.role
-            } catch { }
-
+            const saved = sessionStorage.getItem('token')
+            if (saved) {
+                this.token = saved
+                await this.fetchMe()
+            }
             this.initialized = true
         },
 
@@ -27,23 +26,27 @@ export const useUserStore = defineStore('user', {
                 this.userLogin = res.data.login
                 this.role = res.data.role
             } catch {
-                this.userLogin = ''
+                this.token = ''
                 this.role = ''
+                sessionStorage.removeItem('token')
             }
             this.initialized = true
         },
 
         async login(login: string, password: string) {
-            await api.post('/login', { login, password })
-            this.initialized = false
-            await this.fetchMe()
+            const res = await api.post('/login', { login, password })
+            this.token = res.data.token
+            this.role = res.data.role
+            sessionStorage.setItem('token', this.token)
+            this.initialized = true
         },
 
-        async logout() {
-            try { await api.post('/logout') } catch { }
+        logout() {
+            this.token = ''
             this.userLogin = ''
             this.role = ''
             this.initialized = true
+            sessionStorage.removeItem('token')
         }
     }
 })
