@@ -10,11 +10,15 @@ const api = axios.create({
 api.interceptors.response.use(
     r => r,
     async err => {
-        if (err.response?.status === 401) {
+        const isAuthRequest = err.config?.url?.includes('/login') || err.config?.url?.includes('/logout')
+
+        if (err.response?.status === 401 && !isAuthRequest) {
             const userStore = useUserStore()
             userStore.logout()
             const router = (await import('@/router')).default
-            router.push({ name: Routes.AuthPage })
+            if (router.currentRoute.value.name !== Routes.AuthPage) {
+                router.push({ name: Routes.AuthPage })
+            }
         }
 
         return Promise.reject(err)

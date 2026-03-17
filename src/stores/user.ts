@@ -43,7 +43,7 @@ export const useUserStore = defineStore('user', {
             try { await api.post('/logout') } catch { }
             this.userLogin = ''
             this.role = ''
-            this.initialized = false
+            this.initialized = true
         }
     }
 })
